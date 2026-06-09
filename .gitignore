@@ -216,3 +216,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+workspace/.DS_Store
+/workspace
+.DS_Store
