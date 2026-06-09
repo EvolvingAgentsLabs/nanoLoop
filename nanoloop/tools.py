@@ -28,10 +28,11 @@ def set_session(session: Session | None) -> None:
 
 
 def _hitl_enabled() -> bool:
-    """Human gate is OFF by default; opt in with the `--review` CLI flag.
+    """Human gate is OFF by default; opt in with the `interactive` CLI prefix.
 
-    `--review` sets HARNESS_HITL=1. Gates still auto-approve (and log 'auto') when
-    there's no tty, so an enabled gate never hangs a non-interactive run.
+    `nanoloop interactive ...` sets HARNESS_HITL=1. Gates still auto-approve (and
+    log 'auto') when there's no tty, so an enabled gate never hangs a
+    non-interactive run.
     """
     flag = os.environ.get("HARNESS_HITL", "0").lower() in ("1", "true", "yes")
     return flag and sys.stdin.isatty()
