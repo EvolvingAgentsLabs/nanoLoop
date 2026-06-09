@@ -1,8 +1,21 @@
 [project]
-name = "custom-hardness"
+name = "nanoloop"
 version = "0.1.0"
-description = "Autonomous startup-task harness: OpenRouter model + LangChain DeepAgents + NVIDIA OpenShell sandbox. Gstack-inspired role workflow."
+description = "Tiny autonomous engineering harness: OpenRouter model + LangChain DeepAgents + NVIDIA OpenShell sandbox. Gstack-inspired Plan->Build->Review->Test->Ship loop with session memory and optional human-in-the-loop gates."
+readme = "README.md"
+license = { file = "LICENSE" }
 requires-python = ">=3.11"
+authors = [{ name = "Ismael Faro", email = "ismael.faro.sertage@gmail.com" }]
+keywords = ["agents", "llm", "deepagents", "openrouter", "openshell", "autonomous", "harness"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Code Generators",
+]
 dependencies = [
     "deepagents>=0.1.0",
     "langchain>=0.3.0",
@@ -12,12 +25,20 @@ dependencies = [
     "rich>=13.0.0",
 ]
 
+[project.urls]
+Homepage = "https://github.com/ismaelfaro/nanoLoop"
+Repository = "https://github.com/ismaelfaro/nanoLoop"
+Issues = "https://github.com/ismaelfaro/nanoLoop/issues"
+
 [project.scripts]
-hardness = "harness.main:cli"
+nanoloop = "nanoloop.main:cli"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["harness"]
+packages = ["nanoloop"]
+
+[tool.hatch.build.targets.sdist]
+include = ["nanoloop", "README.md", "LICENSE", "policy.yaml", ".env.example"]

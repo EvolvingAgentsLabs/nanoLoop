@@ -219,3 +219,8 @@ __marimo__/
 workspace/.DS_Store
 /workspace
 .DS_Store
+
+# nanoLoop runtime state
+.nanoloop/
+.harness/
+.openshell/

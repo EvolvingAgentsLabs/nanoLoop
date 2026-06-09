@@ -13,7 +13,7 @@ fi
 if ! command -v openshell >/dev/null 2>&1; then
   echo "WARNING: openshell not found — running WITHOUT sandbox (dev only)." >&2
   echo "Install: curl -LsSf https://raw.githubusercontent.com/NVIDIA/OpenShell/main/install.sh | sh" >&2
-  exec hardness "$TASK"
+  exec nanoloop "$TASK"
 fi
 
-exec openshell sandbox create --policy policy.yaml -- hardness "$TASK"
+exec openshell sandbox create --policy policy.yaml -- nanoloop "$TASK"
