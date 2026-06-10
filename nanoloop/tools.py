@@ -15,6 +15,7 @@ from pathlib import Path
 
 from langchain_core.tools import tool
 
+from . import memory, skills
 from .session import Session
 
 # Active session for this process. Set by main.run(); tools read/write it so the
@@ -50,8 +51,9 @@ def _resolve(path: str) -> Path:
     # Strip leading slash / drive so absolute paths land inside the workspace.
     rel = Path(*[part for part in p.parts if part not in ("/", p.anchor)])
     target = (WORKDIR / rel).resolve()
-    # Block path-traversal escapes.
-    if not str(target).startswith(str(WORKDIR)):
+    # Block path-traversal escapes (`..`, symlinks). is_relative_to avoids the
+    # str-prefix bug where "/workspace-evil" passes a "/workspace" check.
+    if target != WORKDIR and not target.is_relative_to(WORKDIR):
         raise ValueError(f"path escapes workspace: {path}")
     return target
 
@@ -156,4 +158,69 @@ def track_task(title: str, status: str = "pending", note: str = "") -> str:
     return f"[task {t.id}] {t.status}: {t.title}"
 
 
-HARNESS_TOOLS = [run_shell, read_file, write_file, human_review, track_task]
+@tool
+def remember(name: str, description: str, content: str,
+             type: str = "reference") -> str:
+    """Save a durable fact to the Markdown knowledge-graph memory (./Memory).
+
+    Use for facts worth keeping across sessions: user preferences, project
+    constraints, decisions, external references. Link related notes inside
+    `content` with [[other-note-name]] to build the graph.
+      name:        short kebab-case slug (the note's id).
+      description: one-line summary used later for recall.
+      type:        user | feedback | project | reference.
+    """
+    n = memory.write(name, description, content, type)
+    links = f" → links: {', '.join(n.links)}" if n.links else ""
+    return f"[remembered {n.name} ({n.type})]{links}"
+
+
+@tool
+def recall(query: str, limit: int = 5) -> str:
+    """Search memory for relevant facts (knowledge-graph notes).
+
+    Returns matching notes (name, type, description, body) ranked by relevance.
+    Call this before planning so prior preferences/constraints inform the work.
+    """
+    notes = memory.search(query, limit)
+    if not notes:
+        return "[no matching memory]"
+    out = []
+    for n in notes:
+        out.append(f"## {n.name} ({n.type})\n{n.description}\n{n.body}".strip())
+    return "\n\n".join(out)
+
+
+@tool
+def memory_links(name: str) -> str:
+    """Show a note's knowledge-graph neighbors (inbound + outbound [[links]])."""
+    nb = memory.neighbors(name)
+    return (f"{memory.slugify(name)}\n"
+            f"  outbound: {', '.join(nb['outbound']) or '—'}\n"
+            f"  inbound:  {', '.join(nb['inbound']) or '—'}")
+
+
+@tool
+def list_skills() -> str:
+    """List available skills (name: when-to-use) from ./Skills.
+
+    Skills are reusable instruction packs. Pick one with `use_skill`.
+    """
+    cat = skills.catalog_text()
+    return cat or "[no skills available]"
+
+
+@tool
+def use_skill(name: str) -> str:
+    """Load a skill's full instructions by name and follow them for this task."""
+    s = skills.get(name)
+    if not s:
+        avail = ", ".join(sk.name for sk in skills.discover()) or "none"
+        return f"[no skill '{name}'] available: {avail}"
+    return f"# Skill: {s.name}\n{s.description}\n\n{s.body}"
+
+
+HARNESS_TOOLS = [
+    run_shell, read_file, write_file, human_review, track_task,
+    remember, recall, memory_links, list_skills, use_skill,
+]

@@ -3,9 +3,28 @@ from __future__ import annotations
 
 from deepagents import create_deep_agent
 
+from . import memory, skills
 from .model import make_model, subagent_model
 from .roles import ORCHESTRATOR_PROMPT, subagent_specs
 from .tools import HARNESS_TOOLS
+
+
+def _compose_prompt() -> str:
+    """Base orchestrator prompt + live memory index and skills catalog."""
+    parts = [ORCHESTRATOR_PROMPT]
+    idx = memory.index_text()
+    if idx:
+        parts.append(
+            "Known memory (knowledge graph in ./Memory). `recall` to read full "
+            "notes, `remember` to add:\n" + idx
+        )
+    cat = skills.catalog_text()
+    if cat:
+        parts.append(
+            "Available skills (./Skills). `use_skill(<name>)` to load full "
+            "instructions before acting:\n" + cat
+        )
+    return "\n\n".join(parts)
 
 
 def build_agent(checkpointer=None):
@@ -26,7 +45,7 @@ def build_agent(checkpointer=None):
     kwargs = dict(
         model=main,
         tools=HARNESS_TOOLS,
-        system_prompt=ORCHESTRATOR_PROMPT,
+        system_prompt=_compose_prompt(),
         subagents=subagents,
     )
     if checkpointer is not None:

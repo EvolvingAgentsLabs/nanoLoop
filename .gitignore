@@ -224,3 +224,4 @@ workspace/.DS_Store
 .nanoloop/
 .harness/
 .openshell/
+Memory/

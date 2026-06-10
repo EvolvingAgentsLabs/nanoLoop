@@ -10,6 +10,8 @@ Commands:
     nanoloop resume <id> "<follow-up>"   resume and add a new instruction
     nanoloop list              list saved sessions
     nanoloop show <id>         print a session's task log + decisions
+    nanoloop memory [name|links <name>]   browse the Markdown memory graph
+    nanoloop skills            list skills discovered in ./Skills
 
 Human-in-the-loop is OFF by default. Prefix any run command with `interactive`
 to enable gates (plan-approval, pre-ship, blocked); the crew then pauses for your
@@ -87,6 +89,31 @@ def _cmd_show(sid: str) -> None:
         console.print(f"  {d.gate}: {d.verdict} ({d.action}) {d.note}")
 
 
+def _cmd_memory(rest: list[str]) -> None:
+    from . import memory
+    if rest and rest[0] == "links" and len(rest) > 1:
+        nb = memory.neighbors(rest[1])
+        console.print(f"[bold]{memory.slugify(rest[1])}[/]")
+        console.print(f"  outbound: {', '.join(nb['outbound']) or '—'}")
+        console.print(f"  inbound:  {', '.join(nb['inbound']) or '—'}")
+        return
+    if rest:  # show one note
+        n = memory.read(rest[0])
+        if not n:
+            console.print(f"[dim]no note {rest[0]}[/]")
+            return
+        console.print(f"[bold]{n.name}[/] ({n.type}) — {n.description}\n{n.body}")
+        return
+    idx = memory.index_text()
+    console.print(idx or "[dim]no memory yet[/]")
+
+
+def _cmd_skills() -> None:
+    from . import skills
+    cat = skills.catalog_text()
+    console.print(cat or "[dim]no skills in ./Skills[/]")
+
+
 def cli() -> None:
     argv = sys.argv[1:]
     # `interactive` prefix enables human-in-the-loop gates (off by default).
@@ -102,6 +129,12 @@ def cli() -> None:
 
     if cmd == "list":
         _cmd_list()
+        return
+    if cmd == "memory":
+        _cmd_memory(argv[1:])
+        return
+    if cmd == "skills":
+        _cmd_skills()
         return
     if cmd == "show":
         if len(argv) < 2:

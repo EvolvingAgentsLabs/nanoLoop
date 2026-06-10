@@ -18,7 +18,8 @@ Workflow is [Gstack](https://github.com/garrytan/gstack)-inspired: **Plan → Bu
         └─ nanoloop CLI  (nanoloop/main.py)
              └─ DeepAgents orchestrator   [OpenRouter: HARNESS_MODEL]
                   ├─ todo planning tool
-                  ├─ tools: run_shell / read_file / write_file / human_review / track_task
+                  ├─ tools: run_shell / read_file / write_file / human_review /
+                  │         track_task / remember / recall / list_skills / use_skill
                   └─ subagents (isolated context, HARNESS_SUBAGENT_MODEL)
                        planner · builder · reviewer · qa · shipper
 ```
@@ -69,6 +70,36 @@ Each run is a **Session** persisted to `./.nanoloop/sessions/<id>.json`: origina
 task log (`pending → active → done/blocked`), human decisions, and a compact transcript.
 `resume` injects that state back so the crew continues where it left off.
 
+### Memory — Markdown knowledge graph
+
+Durable facts live as Markdown files in `./Memory/<name>.md` with frontmatter
+(`name`, `description`, `metadata.type` ∈ user/feedback/project/reference) and a
+body that links related notes via `[[other-note]]`. Those links form a knowledge
+graph; `Memory/MEMORY.md` is an auto-generated index. The crew uses `recall`
+before planning and `remember` to persist new facts; inspect from the CLI:
+
+```bash
+nanoloop memory                 # index
+nanoloop memory <name>          # one note
+nanoloop memory links <name>    # inbound + outbound [[links]]
+```
+
+Override the location with `NANOLOOP_MEMORY_DIR`.
+
+### Skills
+
+Reusable instruction packs in `./Skills`, either `Skills/<name>.md` or
+`Skills/<name>/SKILL.md` (frontmatter `name` + `description`, body = steps). The
+orchestrator sees every skill's name/description up front and calls
+`use_skill(<name>)` to pull full instructions on demand.
+
+```bash
+nanoloop skills                 # list discovered skills
+```
+
+Override the location with `NANOLOOP_SKILLS_DIR`. A `scaffold-fastapi` skill
+ships as an example.
+
 ### Human-in-the-loop
 
 Off by default (autonomous). Prefix any run command with `interactive` to enable
@@ -89,8 +120,12 @@ python -m twine upload dist/*   # publish to PyPI
 - `nanoloop/model.py` — OpenRouter `ChatOpenAI` factory
 - `nanoloop/agents.py` — `create_deep_agent` w/ subagents + optional checkpointer
 - `nanoloop/roles.py` — Gstack role prompts + orchestrator prompt
-- `nanoloop/tools.py` — shell/file/`human_review`/`track_task` tools
+- `nanoloop/tools.py` — shell/file/`human_review`/`track_task`/memory/skill tools
 - `nanoloop/session.py` — durable session + task memory
+- `nanoloop/memory.py` — Markdown knowledge-graph memory (./Memory)
+- `nanoloop/skills.py` — skill discovery + loading (./Skills)
+- `nanoloop/frontmatter.py` — tiny YAML-free frontmatter parser
+- `Skills/` — reusable instruction packs (example: scaffold-fastapi)
 - `nanoloop/main.py` — streaming CLI w/ subcommands
 - `policy.yaml` — OpenShell policy (default-deny; allowlist gateway + registries)
 

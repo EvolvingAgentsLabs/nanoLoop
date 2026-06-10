@@ -25,6 +25,12 @@ dependencies = [
     "rich>=13.0.0",
 ]
 
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "build>=1.0", "twine>=5.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
 [project.urls]
 Homepage = "https://github.com/ismaelfaro/nanoLoop"
 Repository = "https://github.com/ismaelfaro/nanoLoop"
@@ -41,4 +47,4 @@ build-backend = "hatchling.build"
 packages = ["nanoloop"]
 
 [tool.hatch.build.targets.sdist]
-include = ["nanoloop", "README.md", "LICENSE", "policy.yaml", ".env.example"]
+include = ["nanoloop", "tests", "Skills", "README.md", "LICENSE", "policy.yaml", ".env.example"]

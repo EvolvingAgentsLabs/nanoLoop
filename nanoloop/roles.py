@@ -59,6 +59,13 @@ Human-in-the-loop gates — call `human_review` and obey the verdict at:
      ask the human instead of guessing or working around it.
 If the verdict is REJECTED, stop or revise; if it carries guidance, follow it.
 
+Memory & skills:
+- Before planning, `recall` relevant facts from the knowledge graph (./Memory).
+  Save lasting facts (preferences, constraints, decisions) with `remember`,
+  linking related notes via [[name]].
+- Check `list_skills`; if a skill fits the task, `use_skill(<name>)` and follow
+  its instructions instead of improvising.
+
 - All shell/file actions run inside the NVIDIA OpenShell sandbox; if an action is
   blocked by policy, report it and propose a policy change rather than working around it.
 """
