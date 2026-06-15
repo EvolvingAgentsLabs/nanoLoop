@@ -21,6 +21,7 @@ y/n/guidance. Equivalent to HARNESS_HITL=1.
 """
 from __future__ import annotations
 
+import json
 import os
 import sys
 
@@ -114,6 +115,24 @@ def _cmd_skills() -> None:
     console.print(cat or "[dim]no skills in ./Skills[/]")
 
 
+def _cmd_reconcile(argv: list[str]) -> None:
+    """The `agentvcs merge --reconcile` brain. Reads a merge bundle (JSON) on
+    stdin, writes a Consolidated Knowledge Trace ({goal,trace,notes}) on stdout.
+
+    Usage: nanoloop reconcile [path/to/.env]
+    A .env path is accepted because the merge runs from the *agentvcs* repo, not
+    nanoLoop's dir, so OPENROUTER_API_KEY may not be on the ambient environment.
+    """
+    from .reconcile import reconcile_bundle
+    if argv:
+        load_dotenv(argv[0])
+    else:
+        load_dotenv()
+    bundle = json.load(sys.stdin)
+    result = reconcile_bundle(bundle)
+    sys.stdout.write(json.dumps(result, ensure_ascii=False))
+
+
 def cli() -> None:
     argv = sys.argv[1:]
     # `interactive` prefix enables human-in-the-loop gates (off by default).
@@ -135,6 +154,9 @@ def cli() -> None:
         return
     if cmd == "skills":
         _cmd_skills()
+        return
+    if cmd == "reconcile":
+        _cmd_reconcile(argv[1:])
         return
     if cmd == "show":
         if len(argv) < 2:
